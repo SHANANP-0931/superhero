@@ -1,0 +1,43 @@
+require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
+require('./dbConfig.js/connection');  // Ensure this is properly connecting to your MongoDB database
+const router = require('./routes/router');  // This should handle all routes
+const grievanceController = require('./controller/grievanceController');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+
+const app = express(); // Use `app` consistently
+
+// Middleware
+app.use(cors());
+app.use(express.json());  // Parse incoming JSON requests
+app.use(bodyParser.json());  // Also add body-parser as a fallback for parsing JSON
+
+// Root route
+app.get('/', (req, res) => {
+    res.status(200).send(`<h1 style="color:red;">Server started and waiting for client requests</h1>`);
+});
+
+// Grievance submission route (separate controller logic)
+app.post('/api/grievances/submit', grievanceController.submitGrievance);
+
+// API routes
+app.use('/api', router);  // Mount API routes under '/api' prefix
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/grievanceDB', { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+        console.log('Connected to the MongoDB database');
+    })
+    .catch((err) => {
+        console.error('Database connection error:', err);
+    });
+
+// Port configuration
+const PORT = process.env.PORT || 5000;
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server running at: http://localhost:${PORT}`);
+});
